@@ -60,6 +60,27 @@ public class CourseArray {
 		return elements[index].mySlot;
 	}
 	
+	public int[] getTimeSlot(int index) {
+    	int[] timeSlot = new int[elements.length-1];
+    	for (int i = 0; i < elements.length-1; i++) {
+        	if (elements[i+1].mySlot == index) {
+            	timeSlot[i] = 1;
+        	} else {
+            	timeSlot[i] = -1;
+        	}
+    	}
+    return timeSlot;
+	}
+	public int[] slotStatus(int index) {
+		int[] result = new int[2];
+		for (int i = 1; i < elements.length; i++) {
+			if (elements[i].mySlot == index) {
+				result[0]++;
+				result[1] += elements[i].clashSize();
+			}
+		}
+		return result;
+	} 
 	public void setSlot(int index, int newSlot) {
 		elements[index].mySlot = newSlot;
 	}
