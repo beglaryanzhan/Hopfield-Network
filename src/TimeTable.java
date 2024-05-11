@@ -2,6 +2,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.Arrays;
 import javax.swing.*;
+import java.io.*;
 
 public class TimeTable extends JFrame implements ActionListener {
 
@@ -102,8 +103,43 @@ public class TimeTable extends JFrame implements ActionListener {
 			break;
 		case 3:
 			System.out.println("Exam\tSlot\tClashes");
-			for (int i = 1; i < courses.length(); i++)
-				System.out.println(i + "\t" + courses.slot(i) + "\t" + courses.status(i));
+			for (int i = 0; i < Integer.parseInt(field[0].getText()); i++) {
+				//System.out.println(i + "\t" + courses.slot(i) + "\t" + courses.status(i));
+				System.out.println(Arrays.toString(courses.slotStatus(i)));
+				if(courses.slotStatus(i)[0] > 9 && courses.slotStatus(i)[1] == 0) {
+					System.out.println("I wish to be like a Slot:" + i);
+					System.out.println(Arrays.toString(courses.getTimeSlot(i)));
+					System.out.println(Arrays.toString(courses.slotStatus(i)));
+					try {
+						File file = new File("./src/17_slot_0_clash.txt");
+						boolean lineExists = false;
+
+						BufferedReader reader = new BufferedReader(new FileReader(file));
+						String line;
+						while ((line = reader.readLine()) != null) {
+							if (line.equals(Arrays.toString(courses.getTimeSlot(i)))) {
+								lineExists = true;
+								break;
+							}
+						}
+						reader.close();
+
+						if (!lineExists) {
+							FileWriter writer = new FileWriter(file,true);
+							BufferedWriter bufferedWriter = new BufferedWriter(writer);
+
+							String newLine = Arrays.toString(courses.getTimeSlot(i)) + "\n";
+							bufferedWriter.write(newLine);
+							bufferedWriter.close();
+						} else {
+							System.out.println("Line already exists in the file.");
+						}
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+
 			break;
 		case 4:
 			step = 0;
