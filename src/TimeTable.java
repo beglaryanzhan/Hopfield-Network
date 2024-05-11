@@ -1,5 +1,6 @@
 import java.awt.*;
 import java.awt.event.*;
+import java.util.Arrays;
 import javax.swing.*;
 
 public class TimeTable extends JFrame implements ActionListener {
@@ -28,7 +29,7 @@ public class TimeTable extends JFrame implements ActionListener {
 		String capField[] = {"Slots:", "Courses:", "Clash File:", "Iters:", "Shift:"};
 		field = new JTextField[capField.length];
 		
-		String capButton[] = {"Load", "Start", "Step", "Print", "Exit"};
+		String capButton[] = {"Load", "Start", "Step", "Print", "Cont", "Exit"};
 		tool = new JButton[capButton.length];
 		
 		tools.setLayout(new GridLayout(2 * capField.length + capButton.length, 1));
@@ -46,8 +47,8 @@ public class TimeTable extends JFrame implements ActionListener {
 		}
 		
 		field[0].setText("17");
-		field[1].setText("381");
-		field[2].setText("lse-f-91.stu");
+		field[1].setText("139");
+		field[2].setText("./src/sta-f-83.stu");
 		field[3].setText("1");
 	}
 	
@@ -105,6 +106,22 @@ public class TimeTable extends JFrame implements ActionListener {
 				System.out.println(i + "\t" + courses.slot(i) + "\t" + courses.status(i));
 			break;
 		case 4:
+			step = 0;
+			min = Integer.MAX_VALUE;
+
+			for (int iteration = 1; iteration <= Integer.parseInt(field[3].getText()); iteration++) {
+				courses.iterate(Integer.parseInt(field[4].getText()));
+				draw();
+				clashes = courses.clashesLeft();
+				if (clashes < min) {
+					min = clashes;
+					step = iteration;
+				}
+			}
+			System.out.println("Shift = " + field[4].getText() + "\tMin clashes = " + min + "\tat step " + step);
+			setVisible(true);
+			break;
+		case 5:
 			System.exit(0);
 		}
 	}
