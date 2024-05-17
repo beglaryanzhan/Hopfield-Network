@@ -11,9 +11,7 @@ public class Autoassociator {
 	}
 
 	public int getTrainingCapacity() {
-		// TO DO
-		//????
-		return 0;
+		return this.trainingCapacity;
 	}
 
 	public void training(int pattern[]) {
@@ -48,7 +46,6 @@ public class Autoassociator {
 		for (int i = 0; i < steps; i++) {
 			unitUpdate(neurons);
 		}
-		//??
 	}
 
 	public void fullUpdate(int neurons[]) {

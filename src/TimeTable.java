@@ -1,6 +1,8 @@
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 import javax.swing.*;
 import java.io.*;
 
@@ -11,6 +13,7 @@ public class TimeTable extends JFrame implements ActionListener {
 	private JTextField field[];
 	private CourseArray courses;
 	private Color CRScolor[] = {Color.RED, Color.GREEN, Color.BLACK};
+	private Autoassociator autoassociator;
 	
 	public TimeTable() {
 		super("Dynamic Time Table");
@@ -30,7 +33,7 @@ public class TimeTable extends JFrame implements ActionListener {
 		String capField[] = {"Slots:", "Courses:", "Clash File:", "Iters:", "Shift:"};
 		field = new JTextField[capField.length];
 		
-		String capButton[] = {"Load", "Start", "Step", "Print", "Cont", "Exit"};
+		String capButton[] = {"Load", "Start", "Step", "Print", "WLog", "uUpd", "Train", "Cont", "Exit"};
 		tool = new JButton[capButton.length];
 		
 		tools.setLayout(new GridLayout(2 * capField.length + capButton.length, 1));
@@ -47,7 +50,7 @@ public class TimeTable extends JFrame implements ActionListener {
 			tools.add(tool[i]);
 		}
 		
-		field[0].setText("17");
+		field[0].setText("13");
 		field[1].setText("139");
 		field[2].setText("./src/sta-f-83.stu");
 		field[3].setText("1");
@@ -72,19 +75,20 @@ public class TimeTable extends JFrame implements ActionListener {
 	
 	public void actionPerformed(ActionEvent click) {
 		int min, step, clashes;
-		
+		String filename = "./src/sta-f-83_13_slots_0_clash.txt";
 		switch (getButtonIndex((JButton) click.getSource())) {
 		case 0:
 			int slots = Integer.parseInt(field[0].getText());
 			courses = new CourseArray(Integer.parseInt(field[1].getText()) + 1, slots);
 			courses.readClashes(field[2].getText());
 			draw();
+			autoassociator = new Autoassociator(courses);
 			break;
 		case 1:
 			min = Integer.MAX_VALUE;
 			step = 0;
 			for (int i = 1; i < courses.length(); i++) courses.setSlot(i, 0);
-			
+
 			for (int iteration = 1; iteration <= Integer.parseInt(field[3].getText()); iteration++) {
 				courses.iterate(Integer.parseInt(field[4].getText()));
 				draw();
@@ -103,32 +107,33 @@ public class TimeTable extends JFrame implements ActionListener {
 			break;
 		case 3:
 			System.out.println("Exam\tSlot\tClashes");
+			for (int i = 1; i < courses.length(); i++)
+				System.out.println(i + "\t" + courses.slot(i) + "\t" + courses.status(i));
+			break;
+		case 4:
+			System.out.println("Exam\tSlot\tClashes");
 			for (int i = 0; i < Integer.parseInt(field[0].getText()); i++) {
-				//System.out.println(i + "\t" + courses.slot(i) + "\t" + courses.status(i));
 				System.out.println(Arrays.toString(courses.slotStatus(i)));
-				if(courses.slotStatus(i)[0] > 9 && courses.slotStatus(i)[1] == 0) {
+				if(courses.slotStatus(i)[0] > 10 && courses.slotStatus(i)[1] == 0) {
 					System.out.println("I wish to be like a Slot:" + i);
 					System.out.println(Arrays.toString(courses.getTimeSlot(i)));
 					System.out.println(Arrays.toString(courses.slotStatus(i)));
 					try {
-						File file = new File("./src/17_slot_0_clash.txt");
+						File file = new File(filename);
 						boolean lineExists = false;
-
 						BufferedReader reader = new BufferedReader(new FileReader(file));
 						String line;
 						while ((line = reader.readLine()) != null) {
-							if (line.equals(Arrays.toString(courses.getTimeSlot(i)))) {
+							if (line.equals("Index: " + i + " Timeslot: " + Arrays.toString(courses.getTimeSlot(i)))) {
 								lineExists = true;
 								break;
 							}
 						}
 						reader.close();
-
 						if (!lineExists) {
 							FileWriter writer = new FileWriter(file,true);
 							BufferedWriter bufferedWriter = new BufferedWriter(writer);
-
-							String newLine = Arrays.toString(courses.getTimeSlot(i)) + "\n";
+							String newLine = "Index: " + i + " Timeslot: " + Arrays.toString(courses.getTimeSlot(i)) + "\n";
 							bufferedWriter.write(newLine);
 							bufferedWriter.close();
 						} else {
@@ -141,7 +146,23 @@ public class TimeTable extends JFrame implements ActionListener {
 			}
 
 			break;
-		case 4:
+		case 5:
+			List<int[]> timeslots = readTimeslotsFromFile(filename);
+			for (int[] timeslotwithindex : timeslots) {
+				int[] timeslot = Arrays.copyOfRange(timeslotwithindex, 1, timeslotwithindex.length);
+				int index = autoassociator.unitUpdate(timeslot);
+				courses.setSlot(index+1, timeslotwithindex[0]);
+			}
+			draw();
+			break;
+		case 6:
+			timeslots = readTimeslotsFromFile(filename);
+			for (int[] timeslotwithindex : timeslots) {
+				int[] timeslot = Arrays.copyOfRange(timeslotwithindex, 1, timeslotwithindex.length);
+				autoassociator.training(timeslot);
+			}
+			break;
+		case 7:
 			step = 0;
 			min = Integer.MAX_VALUE;
 
@@ -157,7 +178,7 @@ public class TimeTable extends JFrame implements ActionListener {
 			System.out.println("Shift = " + field[4].getText() + "\tMin clashes = " + min + "\tat step " + step);
 			setVisible(true);
 			break;
-		case 5:
+		case 8:
 			System.exit(0);
 		}
 	}
@@ -165,4 +186,29 @@ public class TimeTable extends JFrame implements ActionListener {
 	public static void main(String[] args) {
 		new TimeTable();
 	}
+	private List<int[]> readTimeslotsFromFile(String filename) {
+		List<int[]> timeslots = new ArrayList<>();
+		try {
+			BufferedReader reader = new BufferedReader(new FileReader(filename));
+			String line;
+			while ((line = reader.readLine()) != null) {
+				String[] parts = line.split(" Timeslot: ");
+				if (parts.length == 2) {
+					int index = Integer.parseInt(parts[0].replaceAll("Index: ", "").trim());
+					String[] timeslotValues = parts[1].replaceAll("\\[|\\]", "").split(", ");
+					int[] timeSlotInfo = new int[timeslotValues.length + 1];
+					timeSlotInfo[0] = index;
+					for (int i = 0; i < timeslotValues.length; i++) {
+						timeSlotInfo[i + 1] = Integer.parseInt(timeslotValues[i]);
+					}
+					timeslots.add(timeSlotInfo);
+				}
+			}
+			reader.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return timeslots;
+	}
+
 }

@@ -1,7 +1,15 @@
-Dataset - sta-f-83\
-If slots = 17 and shift * iters>=12 I observe no clashes, why?\
-My criteria for timetable was 0 clashes and strictly more than 10 courses, however it was hard if not impossible to find more than 18 cases with that criteria.\
-So I have changed criteria to strictly more than 9 to have 19th case which was required for Hopfield Network.\
-Timetables are written in the file ./src/17_slot_0_clash.txt\
-Unsure what getTrainingCapacity and chainUpdate are for?\
-Same about pattern[], I think it needs to be timetable array that I got in my log file however in that case what does this line += pattern[i] * pattern[j]; really means?\ 
+Dataset - sta-f-83, courses = 139\
+If slots = 13 and shift * iters>=12 I observe no clashes, why?\
+My criteria for timetable was 0 clashes and strictly more than 10 courses
+Timetables are written in the file /src/sta-f-83_13_slots_0_clash.txt\
+0.139*139=19 records were recorded in the file.\ 
+
+Dataset - uta-s-93, courses = 622\
+Slots = 30, it's hard to make assumption about shift * iters\
+My criteria for timetable was 0 clashes and strictly more than 15 courses
+Timetables are written in the file /src/uta-s-92_30_slots_0_clash.txt\
+0.139*139=86 records were recorded in the file.\
+
+Unsure what getTrainingCapacity is for?\
+I'm not sure that I have implemented unitUpdate correctly and the logic related under neurons and patterns\
+Because after unitUpdate I'm getting much worse results than before\
