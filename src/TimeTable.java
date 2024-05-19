@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.*;
 import java.io.*;
+import java.util.Random;
 
 public class TimeTable extends JFrame implements ActionListener {
 
@@ -30,7 +31,7 @@ public class TimeTable extends JFrame implements ActionListener {
 	}
 	
 	public void setTools() {
-		String capField[] = {"Slots:", "Courses:", "Clash File:", "Iters:", "Shift:"};
+		String capField[] = {"Slots:", "Courses:", "Clash File:", "Iters:", "Shift:", "Cycles:"};
 		field = new JTextField[capField.length];
 		
 		String capButton[] = {"Load", "Start", "Step", "Print", "WLog", "uUpd", "Train", "Cont", "Exit"};
@@ -50,10 +51,11 @@ public class TimeTable extends JFrame implements ActionListener {
 			tools.add(tool[i]);
 		}
 		
-		field[0].setText("13");
-		field[1].setText("139");
-		field[2].setText("./src/sta-f-83.stu");
+		field[0].setText("30");
+		field[1].setText("622");
+		field[2].setText("./src/uta-s-92.stu");
 		field[3].setText("1");
+		field[5].setText("15");
 	}
 	
 	public void draw() {
@@ -75,7 +77,7 @@ public class TimeTable extends JFrame implements ActionListener {
 	
 	public void actionPerformed(ActionEvent click) {
 		int min, step, clashes;
-		String filename = "./src/sta-f-83_13_slots_0_clash.txt";
+		String filename = "./src/uta-s-92_30_slots_0_clash.txt";
 		switch (getButtonIndex((JButton) click.getSource())) {
 		case 0:
 			int slots = Integer.parseInt(field[0].getText());
@@ -147,15 +149,28 @@ public class TimeTable extends JFrame implements ActionListener {
 
 			break;
 		case 5:
-			List<int[]> timeslots = readTimeslotsFromFile(filename);
-			for (int[] timeslotwithindex : timeslots) {
-				int[] timeslot = Arrays.copyOfRange(timeslotwithindex, 1, timeslotwithindex.length);
-				int index = autoassociator.unitUpdate(timeslot);
-				courses.setSlot(index+1, timeslotwithindex[0]);
+			int cycles = Integer.parseInt(field[5].getText());
+			step = 0;
+			min = Integer.MAX_VALUE;
+			for (int i = 0; i < cycles; i++) {
+				for (int iteration = 1; iteration <= Integer.parseInt(field[3].getText()); iteration++) {
+					courses.iterate(Integer.parseInt(field[4].getText()));
+					Random random = new Random();
+					int randomSlot = random.nextInt(Integer.parseInt(field[0].getText()));
+					int index = autoassociator.unitUpdate(courses.getTimeSlot(randomSlot));
+					courses.setSlot(index+1, randomSlot);
+					clashes = courses.clashesLeft();
+					if (clashes < min) {
+						min = clashes;
+						step = iteration;
+					}
+				}
+				System.out.println("Shift = " + field[4].getText() + "\tMin clashes = " + min + "\tat step " + step + "\tCycle = " + (i+1));
+				draw();
 			}
-			draw();
 			break;
 		case 6:
+			List<int[]> timeslots = readTimeslotsFromFile(filename);
 			timeslots = readTimeslotsFromFile(filename);
 			for (int[] timeslotwithindex : timeslots) {
 				int[] timeslot = Arrays.copyOfRange(timeslotwithindex, 1, timeslotwithindex.length);
